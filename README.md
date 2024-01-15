@@ -1,4 +1,10 @@
-# Create SSH secret for CasC SCM retriever in Cjoc 
+# Create SSH secret for CasC SCM retriever in CloudBees Operations Center
+
+This repo is about how to enable SSH for Git in the CasC retriever on K8s
+
+See
+* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm
+* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_scm_configuration 
 
 ## Required files for SSH auth:
 
