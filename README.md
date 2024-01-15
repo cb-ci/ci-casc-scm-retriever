@@ -72,7 +72,7 @@ OperationsCenter:
     Retriever:
       Enabled: true
       #scmRepo: "https://github.com/cb-ci/casc.git"
-      scmRepo: "git@github.com:cb-ci/casc.git" <- Adjust to youfr CJOC Casc repo
+      scmRepo: "git@github.com:cb-ci/casc.git" <- Adjust to your CJOC Casc repo
       # OperationsCenter.CasC.Retriever..scmBranch -- The branch of the repo containing the casc bundle
       scmBranch: "master"
       # OperationsCenter.CasC.Retriever.scmBundlePath -- path to a folder within the repo where the bundle.yaml is located
