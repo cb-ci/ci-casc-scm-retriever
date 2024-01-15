@@ -54,7 +54,7 @@ kubectl create secret generic casc-ssh-secret  --from-file=./
   * Set sshConfig: The k8s ssh secret name is required here(That we have created in the steps above)
   * `Casc.Retriever.secrets.sshConfig=casc-ssh-secret`
 
-The overall Helm values ection for SCM retriever looks like this:
+* The overall Helm values section for SCM retriever looks like this:
 
 ```
 # Operations Center options
