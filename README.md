@@ -5,6 +5,7 @@ This repo is about how to enable SSH for Git in the CasC retriever on K8s
 See
 * https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm
 * https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_scm_configuration 
+* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_optional_configure_github_webhook_support
 
 ## Required files for SSH auth:
 
@@ -48,13 +49,49 @@ kubectl delete secret casc-ssh-secret
 kubectl create secret generic casc-ssh-secret  --from-file=./
 ```
 
-* Enable CasC retriever in Helm values
+## Create Webhook 
+
+See 
+* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_optional_configure_github_webhook_support
+
+
+* Create Webhook Secret 
+
+> export WEBHOOK_SECRET=$(echo -n any string | shasum -a 256 | awk '{ print $1 }') 
+
+
+* In GitHub -> CJoc casc repo -> Setting -> Webhooks
+* Create Webhook
+ * https://docs.github.com/en/webhooks/using-webhooks/creating-webhooks
+ * https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries
+
+
+> PayLoad URL: https:/${DOMAIN}/cjoc/casc-retriever/retriever-github-webhook/
+> Secret: $WEBHOOK_SECRET
+
+* Add k8s secret with Webhook secret
+
+```
+cat <<EOF | kubectl  apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: casc-webhook-secret
+type: Opaque
+stringData:
+    casc-webhook-secret: $WEBHOOK_SECRET
+EOF
+```
+
+
+
+## Enable CasC retriever in Helm values
   * Enable  CasC retriever: 
   * `Casc.Retriever.Enabled=true`
   * Set sshConfig: The k8s ssh secret name is required here(That we have created in the steps above)
   * `Casc.Retriever.secrets.sshConfig=casc-ssh-secret`
 
-* The overall Helm values section for SCM retriever looks like this:
+## Helm values section for SCM retriever looks like this:
 
 ```
 # Operations Center options
@@ -91,7 +128,7 @@ OperationsCenter:
         ...
         sshConfig: casc-ssh-secret # <- For SSH we need to set the k8s secret containing the ssh secret 
         # OperationsCenter.CasC.Retriever.secrets.githubWebhookSecret -- If Github webhooks will be using a secret, set it up here. If not indicated all webhooks from configured repository + branch will be accepted
-        githubWebhookSecret: null
+        githubWebhookSecret: casc-cjoc-retriever-webhook-secret
 
 ```
 
