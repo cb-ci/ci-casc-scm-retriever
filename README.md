@@ -91,7 +91,7 @@ EOF
   * Set sshConfig: The k8s ssh secret name is required here(That we have created in the steps above)
   * `Casc.Retriever.secrets.sshConfig=casc-ssh-secret`
 
-## Helm values section for SCM retriever looks like this:
+## SSH AUTH: Helm values section for SCM retriever looks like this:
 
 ```
 # Operations Center options
@@ -131,4 +131,40 @@ OperationsCenter:
         githubWebhookSecret: casc-cjoc-retriever-webhook-secret
 
 ```
+
+# HTTP Basic Auth: Helm values section for SCM retriever looks like this:
+
+## create secret
+
+```
+kubectl create secret generic casc-retriever-secrets \
+    --from-literal=scmUsername=xxxx \
+    --from-literal=scmPassword='xxxx' 
+
+kubectl get secret casc-retriever-secrets -o yaml 
+```
+
+## Adjust helm values
+
+
+
+```
+  CasC:
+    Enabled: true
+    Retriever:
+      Enabled: true
+      # OperationsCenter.CasC.Retriever.scmRepo -- The url of the repo containing the casc bundle
+      scmRepo: <REPO_URL>
+      # OperationsCenter.CasC.Retriever.scmBranch -- The branch of the repo containing the casc bundle
+      scmBranch: <BRANCH_NAME>
+      # OperationsCenter.CasC.Retriever.secrets -- Allows you to customize the key used for each secret value
+      secrets:
+        # OperationsCenter.CasC.Retriever.secrets.secretName -- Define the name of the object that holds the secrets, defaults to casc-retriever-secrets if not specified
+        secretName: casc-retriever-secrets
+        # OperationsCenter.CasC.Retriever.secrets.scmUsername -- SCM username to authenticate against the repo
+        scmUsername: scmUsername
+        # OperationsCenter.CasC.Retriever.secrets.scmPassword -- SCM password / token used in user authentication in the repo
+        scmPassword: scmPassword
+```
+
 
