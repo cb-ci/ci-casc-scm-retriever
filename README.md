@@ -1,11 +1,13 @@
-# Create SSH secret for CasC SCM retriever in CloudBees Operations Center
-
-This repo is about how to enable SSH for Git in the CasC retriever on K8s
-
+This repo is about how to enable CasC SCM Retriever on k8s
 See
 * https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm
-* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_scm_configuration 
+* https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_scm_configuration
 * https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_optional_configure_github_webhook_support
+
+# GitHub: SSH Secret and config
+
+## Create SSH secret for CasC SCM retriever in CloudBees Operations Center
+
 
 ## Required files for SSH auth:
 
@@ -49,7 +51,7 @@ kubectl delete secret casc-ssh-secret
 kubectl create secret generic casc-ssh-secret  --from-file=./
 ```
 
-## Create Webhook 
+## Create Webhook (Optional, when webhooks should be enabled)
 
 See 
 * https://docs.cloudbees.com/docs/cloudbees-ci/latest/casc-oc/bundle-retrieval-scm#_optional_configure_github_webhook_support
@@ -132,21 +134,52 @@ OperationsCenter:
 
 ```
 
-# HTTP Basic Auth: Helm values section for SCM retriever looks like this:
 
-## create secret
+# BitBucket: HTTP Basic Auth with App Password token
+
+## Generate an App Password in Bitbucket
+see https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/
+
+* Go to your Bitbucket account settings:
+  https://bitbucket.org/account/settings/
+* Under the Access management section, click App passwords.
+* Click the Create app password button.
+* Give your app password a meaningful name (e.g., "Git CLI Auth").
+* Select the permissions required for your operations. For basic Git usage with a private repository, ensure the following are checked:
+
+ * Repositories:
+  * > Read
+  * > Write
+
+* (Optional) Account → Read, if you want to access user information.
+* Click Create and note down the app password displayed (you won’t see it again).
+
+# Test local first(Optional, not required for CasC SCM retriever)
+
+* Stop and clean the local git cache daemon, it might contain an old token
+> git credential-cache exit
+
+> git clone https://<your_bitbucket_username>@bitbucket.org/<workspace>/<repository>.git
+
+* git will ask you now for the app password token
+* make a change and try to push to git 
+* git push should be successfully 
+
+
+
+## create K8s secret with BB username and app pw token
 
 ```
 kubectl create secret generic casc-retriever-secrets \
     --from-literal=scmUsername=xxxx \
-    --from-literal=scmPassword='xxxx' 
+    --from-literal=scmPassword=xxxx 
 
 kubectl get secret casc-retriever-secrets -o yaml 
 ```
 
+Note: i added the `--from-literal=scmPassword=xxxx without ''` , have not tested if quotes matters or not. it worked for me without the surrounding single quotes
+--from-literal=scmPassword=xxxx  vs --from-literal=scmPassword='xxxx'
 ## Adjust helm values
-
-
 
 ```
   CasC:
@@ -157,6 +190,10 @@ kubectl get secret casc-retriever-secrets -o yaml
       scmRepo: <REPO_URL>
       # OperationsCenter.CasC.Retriever.scmBranch -- The branch of the repo containing the casc bundle
       scmBranch: <BRANCH_NAME>
+      # OperationsCenter.CasC.Retriever.scmPollingInterval -- How frequently to poll SCM for changes
+      # Interval is specified using standard java Durataion format
+      # (see https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-)
+      scmPollingInterval: "PT1M"
       # OperationsCenter.CasC.Retriever.secrets -- Allows you to customize the key used for each secret value
       secrets:
         # OperationsCenter.CasC.Retriever.secrets.secretName -- Define the name of the object that holds the secrets, defaults to casc-retriever-secrets if not specified
@@ -167,4 +204,29 @@ kubectl get secret casc-retriever-secrets -o yaml
         scmPassword: scmPassword
 ```
 
+# Git credentials cache (Optional, not required for CasC SCM retriever)
+
+
+Cache Your Credentials
+To avoid entering the app password every time:
+
+Configure Git to cache your credentials:
+
+```
+git config --global credential.helper store
+```
+
+The next time you push, your credentials will be stored in plain text in ~/.git-credentials.
+
+Alternatively, use the cache helper to store credentials temporarily:
+```
+git config --global credential.helper cache
+```
+
+By default, credentials will be cached for 15 minutes. You can adjust the timeout:
+
+```
+git config --global credential.helper 'cache --timeout=3600'
+
+```
 
