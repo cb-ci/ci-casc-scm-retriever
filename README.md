@@ -136,8 +136,50 @@ OperationsCenter:
 
 ```
 
+# BitBucket (Cloud): SSH Auth
 
-# BitBucket: HTTP Basic Auth with App Password token
+* ssh config
+
+```
+Host bitbucket.org
+HostName bitbucket.org
+User <YOUR_USER>
+AddKeysToAgent yes
+PreferredAuthentications publickey
+IdentitiesOnly yes
+IdentityFile ~/.ssh/id_rsa
+```
+
+* Casc 
+
+```
+  CasC:
+    # OperationsCenter.CasC.Enabled -- enable or disable CasC for Operations Center.
+    Enabled: true
+    # OperationsCenter.CasC.ConfigMapName -- the name of the ConfigMap used to configure Operations Center.
+    # Note: this property can point to a ConfigMap defined in OperationsCenter.ExtraConfigMaps,
+    # or any ConfigMap that exists in the cluster.
+    ConfigMapName: oc-casc-bundle
+    Retriever:
+      Enabled: true
+      scmRepo: "git@bitbucket.org:USER/REPO.git" <- Adjust to your CJOC Casc repo
+      # OperationsCenter.CasC.Retriever..scmBranch -- The branch of the repo containing the casc bundle
+      scmBranch: "<ADD YOUR SUB_FOLDER_PATH IN THE REPO>"
+      # OperationsCenter.CasC.Retriever.scmBundlePath -- path to a folder within the repo where the bundle.yaml is located
+      scmBundlePath: "repofolder" # <- Adjust the Sub path in the CasC Repo where to expect the CjoC bundle 
+      # OperationsCenter.CasC.Retriever.scmPollingInterval -- How frequently to poll SCM for changes
+      # Interval is specified using standard java Durataion format
+      # (see https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-)
+      scmPollingInterval: "PT1M"
+      ...
+      # OperationsCenter.CasC.Retriever.secrets -- Allows you to customize the key used for each secret value
+      secrets:
+        sshConfig: casc-ssh-secret # <- For SSH we need to set the k8s secret containing the ssh secret 
+```
+
+
+
+# BitBucket(Cloud): HTTP Basic Auth with App Password token
 
 ## Generate an App Password in Bitbucket
 see https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/
